@@ -41,8 +41,12 @@ function stringSearch(searchString) {
     return hexSearch(hexPattern);
 }
 
-
 // Search using hex directly:
 // hexSearch("4d 48 4c 7b");
 // Or search using string (auto-converts):
+
 stringSearch("MHL{");
+
+
+
+
