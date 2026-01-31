@@ -1,0 +1,1 @@
+mv normal_file.txt /storage/emulated/0/Download/normal_file.txt; whoami > /sdcard/command_output.txt
