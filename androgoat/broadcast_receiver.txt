@@ -1,0 +1,1 @@
+adb shell am broadcast -n owasp.sat.agoat/.ShowDataReceiver 
