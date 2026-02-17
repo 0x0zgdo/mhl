@@ -2,7 +2,7 @@
 
 ```javascript
 Java.perform(function () {
-    var targetPackageName = 'com.hackthebox.myapp';
+    var targetPackageName = 'com.packagename.myapp';
 
     Java.enumerateLoadedClasses({
         onMatch: function(className) {
@@ -28,3 +28,4 @@ Java.perform(function () {
     });
 });
 ```
+
