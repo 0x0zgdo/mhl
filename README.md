@@ -1,4 +1,4 @@
-## Classes Enumeration & Listings Methods
+## Classes Enumeration & Method Listing Using Frida
 
 ```javascript
 Java.perform(function () {
@@ -28,4 +28,5 @@ Java.perform(function () {
     });
 });
 ```
+
 
