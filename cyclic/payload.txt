@@ -1,1 +1,3 @@
-1. mv normal_file.txt /storage/emulated/0/Download/normal_file.txt; ls > /sdcard/command_output.txt
+//single qoutes was used so that shell will interpet this as a one file when run
+
+touch 'normal.txt;ls>pwned.txt'
