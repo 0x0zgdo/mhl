@@ -1,4 +1,4 @@
-const monoLib = Process.getModuleByName('libmonosgen-2.0.so');
+9const monoLib = Process.getModuleByName('libmonosgen-2.0.so');
 
 // Get all the Mono API functions
 const mono_get_root_domain = new NativeFunction(
@@ -131,6 +131,33 @@ Interceptor.attach(nativePtr, {
             console.log('[!] Blocking IsLocked from being set!');
             // redirect to a dummy address or just nop it
             args[2] = ptr(0); // set value to false/null
+        }
+    }
+});
+
+
+const klass = mono_class_from_name(
+    targetImage,
+    Memory.allocUtf8String('System.Net.Http'),
+    Memory.allocUtf8String('StringContent')
+);
+
+const method = mono_class_get_method_from_name(
+    klass,
+    Memory.allocUtf8String('.ctor'),  // constructor
+    -1
+);
+
+const nativePtr = mono_compile_method(method);
+
+Interceptor.attach(nativePtr, {
+    onEnter(args) {
+        // args[1] = the JSON string being sent
+        try {
+            const body = args[1].add(12).readUtf16String();
+            console.log('[+] HTTP Body:', body);
+        } catch(e) {
+            console.log('[-] Error reading body:', e);
         }
     }
 });
