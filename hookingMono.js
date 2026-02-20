@@ -104,3 +104,33 @@ if (!targetImage) {
             console.log('[+] CheckPin hooked successfully!');
         }
     }
+
+
+
+
+const klass = mono_class_from_name(
+    targetImage,
+    Memory.allocUtf8String('YourNamespace'),
+    Memory.allocUtf8String('AppPreferencesService')
+);
+
+const method = mono_class_get_method_from_name(
+    klass,
+    Memory.allocUtf8String('Set'),
+    -1
+);
+
+const nativePtr = mono_compile_method(method);
+
+Interceptor.attach(nativePtr, {
+    onEnter(args) {
+        const key = args[1].add(12).readUtf16String();
+        console.log('[+] Set called with key:', key);
+
+        if (key === 'IsLocked') {
+            console.log('[!] Blocking IsLocked from being set!');
+            // redirect to a dummy address or just nop it
+            args[2] = ptr(0); // set value to false/null
+        }
+    }
+});
