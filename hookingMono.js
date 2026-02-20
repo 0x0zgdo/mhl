@@ -136,28 +136,177 @@ Interceptor.attach(nativePtr, {
 });
 
 
-const klass = mono_class_from_name(
-    targetImage,
-    Memory.allocUtf8String('System.Net.Http'),
-    Memory.allocUtf8String('StringContent')
-);
+// Decompiled with JetBrains decompiler
+// Type: Maui.Ocs.App.Services.HttpService
+// Assembly: Maui.Ocs.App, Version=3.0.1.0, Culture=neutral, PublicKeyToken=null
+// MVID: B6F0EA97-2C26-404D-9DC8-BE68416FD575
+// Assembly location: C:\Users\consultant\Desktop\output_dir\output_dir\Maui.Ocs.App.dll
 
-const method = mono_class_get_method_from_name(
-    klass,
-    Memory.allocUtf8String('.ctor'),  // constructor
-    -1
-);
+using Maui.Ocs.App.Interfaces;
+using Microsoft.Maui.Devices;
+using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
 
-const nativePtr = mono_compile_method(method);
+#nullable enable
+namespace Maui.Ocs.App.Services;
 
-Interceptor.attach(nativePtr, {
-    onEnter(args) {
-        // args[1] = the JSON string being sent
-        try {
-            const body = args[1].add(12).readUtf16String();
-            console.log('[+] HTTP Body:', body);
-        } catch(e) {
-            console.log('[-] Error reading body:', e);
-        }
+public class HttpService : IHttpService
+{
+  private readonly IHttpClientFactory _httpClientFactory;
+  private readonly IUserSecureStorageService _userSecureStorageService;
+
+  public HttpService(
+    IHttpClientFactory httpClientFactory,
+    IUserSecureStorageService userSecureStorageService)
+  {
+    this._httpClientFactory = httpClientFactory;
+    this._userSecureStorageService = userSecureStorageService;
+  }
+
+  public async Task<HttpResponseMessage> CheckPin(string username, string pin)
+  {
+    Dictionary<string, string> data = new Dictionary<string, string>()
+    {
+      {
+        "Pin",
+        pin
+      }
+    };
+    HttpClient clientWithUsername = await this.CreateClientWithUsername("OcsJsonApiClient", username);
+    StringContent content = new StringContent(JsonSerializer.Serialize<Dictionary<string, string>>(data), Encoding.UTF8, "application/json");
+    HttpResponseMessage httpResponseMessage;
+    try
+    {
+      httpResponseMessage = await clientWithUsername.PostAsync("Login/CheckDevicePin", (HttpContent) content);
     }
-});
+    finally
+    {
+      content?.Dispose();
+    }
+    data = (Dictionary<string, string>) null;
+    content = (StringContent) null;
+    return httpResponseMessage;
+  }
+
+  public async Task<HttpResponseMessage> RegisterDevice(string username, string password)
+  {
+    Dictionary<string, string> data = new Dictionary<string, string>()
+    {
+      {
+        "Username",
+        username
+      },
+      {
+        "Password",
+        password
+      },
+      {
+        "Platform",
+        DeviceInfo.Platform.ToString()
+      }
+    };
+    HttpClient clientWithNoToken = await this.CreateClientWithNoToken("OcsJsonApiClient");
+    StringContent content = new StringContent(JsonSerializer.Serialize<Dictionary<string, string>>(data), Encoding.UTF8, "application/json");
+    HttpResponseMessage httpResponseMessage;
+    try
+    {
+      httpResponseMessage = await clientWithNoToken.PostAsync("Login/RegisterDevice", (HttpContent) content);
+    }
+    finally
+    {
+      content?.Dispose();
+    }
+    data = (Dictionary<string, string>) null;
+    content = (StringContent) null;
+    return httpResponseMessage;
+  }
+
+  public async Task<HttpResponseMessage> RegisterPin(string username, string pin)
+  {
+    Dictionary<string, string> data = new Dictionary<string, string>()
+    {
+      {
+        "Pin",
+        pin
+      }
+    };
+    HttpClient clientWithUsername = await this.CreateClientWithUsername("OcsJsonApiClient", username);
+    StringContent content = new StringContent(JsonSerializer.Serialize<Dictionary<string, string>>(data), Encoding.UTF8, "application/json");
+    HttpResponseMessage httpResponseMessage;
+    try
+    {
+      httpResponseMessage = await clientWithUsername.PostAsync("Login/RegisterPin", (HttpContent) content);
+    }
+    finally
+    {
+      content?.Dispose();
+    }
+    data = (Dictionary<string, string>) null;
+    content = (StringContent) null;
+    return httpResponseMessage;
+  }
+
+  public async Task<HttpResponseMessage> PostAsync(string url)
+  {
+    return await (await this.CreateClientWithSignedInUser("OcsJsonApiClient")).PostAsync(url, (HttpContent) null);
+  }
+
+  public async Task<HttpResponseMessage> PostAsync(string url, Dictionary<string, string> data)
+  {
+    HttpResponseMessage httpResponseMessage;
+    using (StringContent content = new StringContent(JsonSerializer.Serialize<Dictionary<string, string>>(data), Encoding.UTF8, "application/json"))
+      httpResponseMessage = await (await this.CreateClientWithSignedInUser("OcsJsonApiClient")).PostAsync(url, (HttpContent) content);
+    return httpResponseMessage;
+  }
+
+  public async Task<HttpResponseMessage> PostXmlAsync(string url, string data)
+  {
+    HttpResponseMessage httpResponseMessage;
+    using (StringContent content = new StringContent(data, Encoding.UTF8, "application/xml"))
+      httpResponseMessage = await (await this.CreateClientWithSignedInUser("OcsXmlApiClient")).PostAsync(url, (HttpContent) content);
+    return httpResponseMessage;
+  }
+
+  private async Task<HttpClient> CreateClientWithNoToken(string clientApiName)
+  {
+    HttpClient client = this._httpClientFactory.CreateClient(clientApiName);
+    string str1 = Guid.NewGuid().ToString().Substring(0, 20);
+    string str2 = (string) null;
+    client.DefaultRequestHeaders.Add("INT_DEVICE", str1);
+    client.DefaultRequestHeaders.Add("INT_TOKEN", str2);
+    client.DefaultRequestHeaders.Add("INT_SYSTEM", "nma");
+    return client;
+  }
+
+  private async Task<HttpClient> CreateClientWithSignedInUser(string clientApiName)
+  {
+    HttpClient client = this._httpClientFactory.CreateClient(clientApiName);
+    string signedInUserDevice = await this._userSecureStorageService.GetAsync("Device");
+    string async = await this._userSecureStorageService.GetAsync("Token");
+    client.DefaultRequestHeaders.Add("INT_DEVICE", signedInUserDevice);
+    client.DefaultRequestHeaders.Add("INT_TOKEN", async);
+    client.DefaultRequestHeaders.Add("INT_SYSTEM", "nma");
+    HttpClient withSignedInUser = client;
+    client = (HttpClient) null;
+    signedInUserDevice = (string) null;
+    return withSignedInUser;
+  }
+
+  private async Task<HttpClient> CreateClientWithUsername(string clientApiName, string username)
+  {
+    HttpClient client = this._httpClientFactory.CreateClient(clientApiName);
+    string device = await this._userSecureStorageService.GetDevice(username);
+    string token = await this._userSecureStorageService.GetToken(username);
+    client.DefaultRequestHeaders.Add("INT_DEVICE", device);
+    client.DefaultRequestHeaders.Add("INT_TOKEN", token);
+    client.DefaultRequestHeaders.Add("INT_SYSTEM", "nma");
+    HttpClient clientWithUsername = client;
+    client = (HttpClient) null;
+    device = (string) null;
+    return clientWithUsername;
+  }
+}
