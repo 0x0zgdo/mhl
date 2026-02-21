@@ -1,2 +1,0 @@
-bluejay:/ # cat /data/data/com.example.evilapp2/files/yayoutputyay.txt                                                                                             
-Yay! You touched a file from an unexported Content Provider!
